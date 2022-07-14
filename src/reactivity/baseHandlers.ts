@@ -1,4 +1,5 @@
 import { track, trigger } from "./effect";
+import { ReactiveFlags } from "./reactive";
 
 const get = createGetter();
 const set = createSetter();
@@ -6,9 +7,7 @@ const readonlyGet = createGetter(true);
 
 function createGetter(isReadonly = false) {
   return function get(target, key) {
-    console.log(key);
-    
-    if(key == "is_reactive") {
+    if (key == ReactiveFlags.IS_REACTIVE) {
       return !isReadonly;
     }
     const res = Reflect.get(target, key);
@@ -38,7 +37,7 @@ export const readonlyHandlers = {
   get: readonlyGet,
   // 这里的set 需要抛出信息或者警告
   set(target, key, value) {
-    console.warn(`key: ${key} set fail, because set is readonly`)
+    console.warn(`key: ${key} set fail, because set is readonly`);
     return true;
   },
 };
