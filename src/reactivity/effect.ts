@@ -1,7 +1,7 @@
 import { extend } from "../shared";
 
 let activeEffect;
-let shoudTrack;
+let shouldTrack;
 
 class ReactiveEffect {
   private _fn: any;
@@ -20,12 +20,12 @@ class ReactiveEffect {
       return this._fn();
     }
 
-    shoudTrack = true;
+    shouldTrack = true;
     activeEffect = this;
 
     const result = this._fn();
     // reset
-    shoudTrack = false;
+    shouldTrack = false;
 
     return result;
   }
@@ -49,8 +49,7 @@ function cleanupEffect(effect) {
 
 const targetMap = new Map();
 export function track(target, key) {
-  if (!activeEffect) return;
-  if (!shoudTrack) return;
+  if (!isTracking()) return;
 
   // set
   // target -> key -> dep
@@ -66,12 +65,18 @@ export function track(target, key) {
     dep = new Set();
     depsMap.set(key, dep);
   }
-
+  // 如果 dep 中已经有 activeEffect 了，就不需要重复收集了
+  if(dep.has(activeEffect)) return;
+  
   dep.add(activeEffect);
   // const dep = new Set();
 
   // 反向收集deps
   activeEffect.deps.push(dep);
+}
+// 抽离 shouldTrack 和 activeEffect 状态判断
+function isTracking() {
+  return shouldTrack && !activeEffect !== undefined;
 }
 
 export function trigger(target, key) {
