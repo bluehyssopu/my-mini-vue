@@ -1,4 +1,8 @@
-import { extend } from '../shared';
+import { extend } from "../shared";
+
+let activeEffect;
+let shoudTrack;
+
 class ReactiveEffect {
   private _fn: any;
   active = true;
@@ -10,12 +14,25 @@ class ReactiveEffect {
 
   run() {
     activeEffect = this;
-    return this._fn();
+    // 1. 会收集依赖
+    // shouldTrack来区分
+    if (!this.active) {
+      return this._fn();
+    }
+
+    shoudTrack = true;
+    activeEffect = this;
+
+    const result = this._fn();
+    // reset
+    shoudTrack = false;
+
+    return result;
   }
   stop() {
-    if(this.active) {
+    if (this.active) {
       cleanupEffect(this);
-      if(this.onStop) {
+      if (this.onStop) {
         this.onStop();
       }
       this.active = false;
@@ -27,10 +44,14 @@ function cleanupEffect(effect) {
   effect.deps.forEach((dep: any) => {
     dep.delete(effect);
   });
+  effect.deps.length = 0;
 }
 
 const targetMap = new Map();
 export function track(target, key) {
+  if (!activeEffect) return;
+  if (!shoudTrack) return;
+
   // set
   // target -> key -> dep
   let depsMap = targetMap.get(target);
@@ -45,9 +66,6 @@ export function track(target, key) {
     dep = new Set();
     depsMap.set(key, dep);
   }
-
-  // activeEffect可能会出现undefined 需要提前处理
-  if(!activeEffect) return;
 
   dep.add(activeEffect);
   // const dep = new Set();
@@ -69,7 +87,6 @@ export function trigger(target, key) {
   }
 }
 
-let activeEffect;
 export function effect(fn, options: any = {}) {
   // fn
   const _effect = new ReactiveEffect(fn, options.scheduler);
