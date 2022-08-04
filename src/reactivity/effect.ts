@@ -65,24 +65,31 @@ export function track(target, key) {
     dep = new Set();
     depsMap.set(key, dep);
   }
-  // 如果 dep 中已经有 activeEffect 了，就不需要重复收集了
-  if(dep.has(activeEffect)) return;
-  
-  dep.add(activeEffect);
-  // const dep = new Set();
 
-  // 反向收集deps
+  trackEffects(dep);
+}
+
+export function trackEffects(dep) {
+  // 如果 dep 中已经有 activeEffect 了，就不需要重复收集了
+  if (dep.has(activeEffect)) return;
+
+  dep.add(activeEffect);
   activeEffect.deps.push(dep);
 }
+
 // 抽离 shouldTrack 和 activeEffect 状态判断
-function isTracking() {
-  return shouldTrack && !activeEffect !== undefined;
+export function isTracking() {
+  return shouldTrack && activeEffect !== undefined;
 }
 
 export function trigger(target, key) {
   let depsMap = targetMap.get(target);
   let dep = depsMap.get(key);
 
+  triggerEffects(dep);
+}
+
+export function triggerEffects(dep) {
   for (const effect of dep) {
     if (effect.scheduler) {
       effect.scheduler();
