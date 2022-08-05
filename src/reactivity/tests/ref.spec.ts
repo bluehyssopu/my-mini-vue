@@ -1,6 +1,6 @@
 import { effect } from "../effect";
 import { reactive } from "../reactive";
-import { isRef, ref, unRef } from "../ref";
+import { isRef, proxyRefs, ref, unRef } from "../ref";
 describe('ref', () => {
   it('happy path', () => {
     const a = ref(1);
@@ -56,5 +56,30 @@ describe('ref', () => {
     });
     expect(unRef(a)).toBe(1);
     expect(unRef(1)).toBe(1);
+  });
+
+  it('proxyRefs', () => {
+    const user = {
+      age: ref(10),
+      name: "kzmqvq",
+    };
+
+    // get -> age (ref) 如果本身是ref类型的话 给他返回value值
+    // 如果不是 返回ref    not ref -> value
+
+    const proxyUser = proxyRefs(user);
+
+    // set -> ref .value
+    expect(user.age.value).toBe(10);
+    expect(proxyUser.age).toBe(10);
+    expect(proxyUser.name).toBe("kzmqvq");
+
+    proxyUser.age = 20;
+    expect(proxyUser.age).toBe(20);
+    expect(user.age.value).toBe(20);
+    
+    proxyUser.age = ref(10)
+    expect(user.age.value).toBe(10);
+    expect(proxyUser.age).toBe(10);
   });
 });
