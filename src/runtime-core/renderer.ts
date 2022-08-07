@@ -1,3 +1,4 @@
+import { isObject } from "../shared/index";
 import { createComponentInstence, setupComponent } from "./component";
 
 export function render(vnode, container) {
@@ -10,8 +11,44 @@ function patch(vnode, container) {
   // 是 element 那么就应该处理 element
   // 思考： 如何区分是 element 还是 component类型呢？
   // processElement()
-  
-  processComponent(vnode, container);
+  console.log(vnode.type);
+  if (typeof vnode.type === "string") {
+    processElement(vnode, container);
+  } else if (isObject(vnode.type)) {
+    processComponent(vnode, container);
+  }
+}
+
+function processElement(vnode: any, container: any) {
+  mountElement(vnode, container);
+}
+
+function mountElement(vnode: any, container: any) {
+  const el = document.createElement(vnode.type);
+
+  // 涉及 string 和 array 两种类型
+  const { children } = vnode;
+
+  if (typeof children === "string") {
+    el.textContent = children;
+  } else if (Array.isArray(children)) {
+    // vnode
+    mountChildren(vnode, container);
+  }
+  // props
+  const { props } = vnode;
+  for (const key in props) {
+    const val = props[key];
+    el.setAttribute(key, val);
+  }
+
+  container.append(el);
+}
+
+function mountChildren(vnode, container) {
+  vnode.children.forEach((v) => {
+    patch(v, container);
+  });
 }
 
 function processComponent(vnode: any, container: any) {
