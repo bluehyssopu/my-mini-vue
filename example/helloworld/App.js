@@ -1,8 +1,10 @@
 import { h } from "../../lib/my-mini-vue.esm.js";
 
+window.self = null;
 export const App = {
   // 假设必须要写 render
   render() {
+    window.self = this;
     // ui
     return h(
       "div",
@@ -10,16 +12,18 @@ export const App = {
         id: "root",
         class: ["red", "hard"],
       },
-      // "hi, " + this.msg
+      // setupState
+      // this.$el -> get root element
+      "hi, " + this.msg
       // string
       // Array
-      [h("p", { class: "red" }, "hi"), h("p", { class: "blue" }, "mini-vue")]
+      // [h("p", { class: "red" }, "hi"), h("p", { class: "blue" }, "mini-vue")]
     );
   },
 
   setup() {
     return {
-      msg: "my-mini-vue",
+      msg: "my-mini-vue.This is a test.Hello World!",
     };
   },
 };
